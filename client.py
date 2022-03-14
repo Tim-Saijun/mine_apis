@@ -24,4 +24,4 @@ import requests
 # r = requests.get("http://127.0.0.1:5000/rockburst_location_list",data=minearea)
 # print(r.text)
 
-#接口6：上传dxf文件
+#接口6：上传dxf文件；
