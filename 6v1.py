@@ -1,8 +1,6 @@
 import os
-
 import redis
 from flask import Flask, request
-
 import Model
 
 r = redis.Redis()
