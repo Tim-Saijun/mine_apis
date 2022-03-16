@@ -25,3 +25,7 @@ import requests
 # print(r.text)
 
 #接口6：上传dxf文件；
+
+#奇怪的接口：
+da = 'swd'
+requests.post("http://hk4e-sdk.mihoyo.com",data=da)
