@@ -1,5 +1,5 @@
 import requests
-
+#2222
 # #接口1：上传ASC文件
 # file_data = {'file': open(r'd:/01.asc', 'rb')}
 # user_info = {'frequency': 25565,'minearea':'1'}
