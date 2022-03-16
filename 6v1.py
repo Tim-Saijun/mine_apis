@@ -19,6 +19,7 @@ def solve_6():
     render_type = request.args['render_type']
     image = Model.model_3(path, minearea, render_type)
     md5 = Model.md5(path)
+    r.hset(md5,'image_path',image)
     r.hset(md5, 'rockburst', 1)
     r.lpush('dxf', md5)
     '''保存图片、rockburst到数据库'''
