@@ -2,7 +2,10 @@ import os
 import redis
 from flask import Flask, request
 import Model
-
+import  mysql
+"""To Do:
+1.假设模型传图片路径，是否考虑在redis也保存路径
+"""
 r = redis.Redis()
 app = Flask(__name__)
 
@@ -19,5 +22,7 @@ def solve_6():
     r.hset(md5, 'rockburst', 1)
     r.lpush('dxf', md5)
     '''保存图片、rockburst到数据库'''
-
+    db_add = 'REPLACE INTO dxff(dxf_file,render_type,minearea,path,rockburst,md5) values (%r,%s,%s,%r,%d,%r)' %(f.filename,render_type,minearea,path,1,md5)
+    db = mysql.DB()
+    db.execute(db_add)
     return image

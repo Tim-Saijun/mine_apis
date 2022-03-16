@@ -1,9 +1,11 @@
 import redis
+import mysql
 from flask import Flask
-
+"""To Do:
+1.额外返回md5
+"""
 r = redis.Redis()
 app = Flask(__name__)
-
 
 @app.route('/dxffile_list')
 def solve_7():
@@ -18,9 +20,16 @@ def solve_7():
             info = r.mget(md5, get_info)
             file_list.append(dict(zip(get_info, info)))
         else:
-            '''数据库操作'''
-            pass
+            db = mysql.DB()
+            db_query4 = "select * from dxff where  md5= %r" % md5
+            files_all = db.fetchall(db_query4)
+            if files_all != ():
+                for info in files_all:
+                    file_list.append({"filename": info[1], "rockburst": info[3], "md5": info[7]})
+            else:
+                tag = True
 
         if tag:
             r.lrem('dxf', 0, md5)
     print(file_list)  # 后期改为返回file_list
+    return "something like 7"
