@@ -3,7 +3,7 @@ import redis
 from flask import Flask, request, render_template
 import Model
 """To Do:
-0.要求模型返回一个时间戳，并确定格式;模型是否需要额外传输文件路径？
+0.要求模型返回一个时间戳，并确定时间格式;模型是否需要额外传输文件路径？
 """
 app = Flask(__name__)
 r = redis.Redis()
@@ -11,7 +11,7 @@ r = redis.Redis()
 # 4、震源定位
 @app.route('/locate')
 def solve_4():
-    filenames = ['1', '2']  # 后期修改filenames的内容
+    filenames = request.form['filenames']
     location, level = Model.model_2(filenames)
     for each in filenames:
         minearea = r.hget(each, 'minearea')
