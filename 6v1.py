@@ -4,7 +4,7 @@ from flask import Flask, request
 import Model
 import  mysql
 """To Do:
-1.假设模型传图片路径，是否考虑在redis也保存路径
+
 """
 r = redis.Redis()
 app = Flask(__name__)

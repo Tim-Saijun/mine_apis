@@ -2,7 +2,7 @@ import redis
 import mysql
 from flask import Flask
 """To Do:
-1.额外返回md5
+
 """
 r = redis.Redis()
 app = Flask(__name__)
