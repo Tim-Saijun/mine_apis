@@ -1,6 +1,6 @@
 import pymysql
 import redis
-from flask import Flask
+from flask import Flask,jsonify
 from pymysql import MySQLError
 from scrapy import settings
 
@@ -92,6 +92,10 @@ def solve_1():  # 存下面3个参数，假设他们是前端传入的
 
     return 'yesyesyes'
 
+@app.route('/1')
+def solve_2():
+    res = {'code':33,'state':"deny"}
+    return jsonify(res)
 
 if __name__ == '__main__':
     keys=r.keys()
