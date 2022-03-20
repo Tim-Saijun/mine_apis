@@ -64,7 +64,7 @@ def solve_1():
 
         else:
             print('# 判断数据库，有但是未标注：存； 没有:存，redis先存，code1////')
-            data_info = {'name': name,
+            data_info = {'filename': name,
                          'frequency': frequency,
                          'minearea': minearea,
                          'pick': 0}  # pick为0说明没有标注过
@@ -74,3 +74,4 @@ def solve_1():
             db = mysql.DB()
             db.execute(db_add)
             return "存入成功"
+

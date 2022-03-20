@@ -3,7 +3,6 @@ from flask import Flask, render_template,jsonify
 import mysql
 """To Do:
 0.额外返回响应md5
-1.redis中数据被清除，整个接口不运行了
 """
 app = Flask(__name__)
 r = redis.Redis()
@@ -11,18 +10,23 @@ r = redis.Redis()
 @app.route('/wavefile_list')
 def soleve_3():
     md5_list = r.lrange('asv', 0, -1)
+    print(md5_list)
     tag = False # 用来指示数据库是否存在，不写三层if  减少访问数据库的次数
     file_list = []
     for md5 in md5_list:
         if r.exists(md5):
             print('''# Redis存在md5''')
+            print(r.hgetall(md5))
+            print(str(md5))
             filename = r.hget(md5, 'filename')
+            print(filename)
             pick = r.hget(md5, 'pick')
             position = r.hget(md5, 'position')
             file_list.append({"filename": filename, "pick": pick, "position": position,"md5":md5})
         else:
             print('''在数据库中寻找，存在返回filename，pick，position三个属性,不存在设置tag为True''')
             db = mysql.DB()
+            md5 = bytes.decode(md5)
             db_query3 = "select * from ascd where  md5= %r"%md5
             asc_files_all = db.fetchall(db_query3)
             if asc_files_all != ():
@@ -38,5 +42,5 @@ def soleve_3():
             '''Redis删除对应md5'''
             r.lrem('asv',0,md5)
             print('什么都找不到')
-    print(file_list) # 后期改为返回file_list
-    return str(file_list)
+    print(file_list)
+    return jsonify(str(file_list))
