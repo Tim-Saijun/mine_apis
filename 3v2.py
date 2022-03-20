@@ -15,6 +15,7 @@ def soleve_3():
     for md5 in md5_list:
         '''# Redis存在md5'''
         if r.exists(md5):
+            print("1928888888")
             filename = r.hget(md5, 'filename')
             pick = r.hget(md5, 'pick')
             position = r.hget(md5, 'position')
