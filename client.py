@@ -1,10 +1,10 @@
 import requests
 #2222
-# 接口1：上传ASC文件
-file_data = {'file': open(r'd:/02.asc', 'rb')}
-user_info = {'frequency': 25565,'minearea':'1'}
-r = requests.post("http://127.0.0.1:5000/upload/asc", data=user_info, files=file_data)
-print(r.text)
+# # 接口1：上传ASC文件
+# file_data = {'file': open(r'd:/02.asc', 'rb')}
+# user_info = {'frequency': 25565,'minearea':'1'}
+# r = requests.post("http://127.0.0.1:5000/upload/asc", data=user_info, files=file_data)
+# print(r.text)
 
 # #接口2：标注波形
 # filename = '01.asc'
@@ -12,8 +12,8 @@ print(r.text)
 # print(r.text)
 #
 #接口3：获取波形文件列表
-# r=requests.get("http://127.0.0.1:5000/wavefile_list")
-# print(r.text)
+r=requests.get("http://127.0.0.1:5000/wavefile_list")
+print(r.text)
 # #接口4：震源定位
 # filenames  = ['01.asc','02.asc']
 # r = requests.post("http://127.0.0.1:5000/locate",data=filenames)

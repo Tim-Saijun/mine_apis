@@ -38,4 +38,4 @@ def soleve_3():
             r.lrem('asv',0,md5)
             print('什么都找不到')
     print(file_list) # 后期改为返回file_list
-    return jsonify(file_list)
+    return str(file_list)
