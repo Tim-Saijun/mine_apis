@@ -16,6 +16,10 @@ app.config['ALLOWED_EXTENSIONS'] = {'asc'}  # 集合类型
 
 # 1、上传ASV文件
 # 通过文件名作为唯一标志，可以使用md5码，但是会增加判断时间！！！！！！！！！！！！！
+@app.route('/')
+def fun():
+    return render_template('test000.html')
+
 @app.route('/upload/asc', methods = [ 'POST'])
 def solve_1():
     f = request.files['file']
@@ -25,6 +29,9 @@ def solve_1():
     path = os.path.join(os.getcwd(), "upload/asc/", name)
     f.save(path)
     md5 = Model.md5(path)  # 生成md5,小问题：重名文件会被怎样处理，这关系到md5的生成
+    print('asadsad')
+    r.lpush('asv', md5)
+    print(r.keys())
     print(name)
     print(path)
     print(md5)
@@ -38,6 +45,7 @@ def solve_1():
         db_query = """select * from ascd where name=%r and pick = 1;""" % name
         db = mysql.DB()
         db_flag = db.execute(db_query)
+        print(db_flag)
         if db_flag:
             print("# 判断数据库，有且标注过：返回；")
             db_fetch = db.fetchone(db_query)
@@ -52,6 +60,8 @@ def solve_1():
                          'picks_s': str(picks_s),
                          'pick': 1}  # pick为1说明标注过
             r.hset(md5, mapping = data_info)
+
+            print('asdasd')
             return render_template("test000.html", picks_p = picks_p, picks_s = picks_s)
             # 传递给前端存入失败、已经存在 的信息
 
@@ -63,7 +73,7 @@ def solve_1():
                          'pick': 0}  # pick为0说明没有标注过
             r.hset(md5, mapping = data_info)
 
-            db_add = 'REPLACE INTO ascd(NAME,md5,FREQUENCY, MINEAREA,pick,path) VALUES(%r,%s,%s,%s,0,%r)' % (name, md5,frequency, minearea,path)
+            db_add = 'REPLACE INTO ascd(NAME,md5,FREQUENCY, MINEAREA,pick,path) VALUES(%r,%r,%r,%r,0,%r)' % (name, md5,frequency, minearea,path)
             db = mysql.DB()
             db.execute(db_add)
             return "存入成功"

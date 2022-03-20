@@ -1,5 +1,5 @@
 import redis
-from flask import Flask, render_template
+from flask import Flask, render_template,jsonify
 import mysql
 """To Do:
 0.额外返回响应md5
@@ -18,7 +18,7 @@ def soleve_3():
             filename = r.hget(md5, 'filename')
             pick = r.hget(md5, 'pick')
             position = r.hget(md5, 'position')
-            file_list.append({"filename": filename, "pick": pick, "position": position})
+            file_list.append({"filename": filename, "pick": pick, "position": position,"md5":md5})
         else:
             '''在数据库中寻找，存在返回filename，pick，position三个属性,不存在设置tag为True'''
             db = mysql.DB()
@@ -29,7 +29,7 @@ def soleve_3():
                     filename = asc_file[1]
                     pick = asc_file[4]
                     position = asc_file[9]
-                    tem = {"filename": filename, "pick": pick, "position": position}
+                    tem = {"filename": filename, "pick": pick, "position": position,"md5":md5}
                     file_list.append(tem)
             else :
                 tag = True
@@ -37,5 +37,5 @@ def soleve_3():
             '''Redis删除对应md5'''
             r.lrem('asv',0,md5)
             print('什么都找不到')
-        print(file_list) # 后期改为返回file_list
-        return render_template('test000.html', file_list=file_list)
+    print(file_list) # 后期改为返回file_list
+    return jsonify(file_list)
