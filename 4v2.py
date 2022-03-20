@@ -1,5 +1,5 @@
 import redis
-from flask import Flask
+from flask import Flask,request
 
 import mysql
 
@@ -8,7 +8,8 @@ r = redis.Redis()
 
 @app.route('/locate')
 def solve_4():
-    md5_list = ['1', '2', '3']  # 前端返回
+    md5_list = ['02fcdc687ea469de024bc922f68926ef']  # 前端返回
+    print(md5_list)
     location = [1, 2, 3]
     level = 3
     timestamp = 1  # 上面所有参数后期经过model计算得来

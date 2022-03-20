@@ -29,9 +29,7 @@ def solve_1():
     path = os.path.join(os.getcwd(), "upload/asc/", name)
     f.save(path)
     md5 = Model.md5(path)  # 生成md5,小问题：重名文件会被怎样处理，这关系到md5的生成
-    print('asadsad')
     r.lpush('asv', md5)
-    print(r.keys())
     print(name)
     print(path)
     print(md5)
@@ -61,7 +59,6 @@ def solve_1():
                          'pick': 1}  # pick为1说明标注过
             r.hset(md5, mapping = data_info)
 
-            print('asdasd')
             return render_template("test000.html", picks_p = picks_p, picks_s = picks_s)
             # 传递给前端存入失败、已经存在 的信息
 
