@@ -13,7 +13,7 @@ def soleve_3():
     tag = False # 用来指示数据库是否存在，不写三层if  减少访问数据库的次数
     file_list = []
     for md5 in md5_list:
-        '''# Redis存在md5'''
+        print('''# Redis存在md5''')
         if r.exists(md5):
             print("1928888888")
             filename = r.hget(md5, 'filename')
