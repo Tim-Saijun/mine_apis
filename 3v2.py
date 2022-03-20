@@ -25,6 +25,7 @@ def soleve_3():
             db_query3 = "select * from ascd where  md5= %r"%md5
             asc_files_all = db.fetchall(db_query3)
             if asc_files_all != ():
+                print("数据ssssssssssssss")
                 for asc_file in asc_files_all:
                     filename = asc_file[1]
                     pick = asc_file[4]
@@ -32,6 +33,7 @@ def soleve_3():
                     tem = {"filename": filename, "pick": pick, "position": position,"md5":md5}
                     file_list.append(tem)
             else :
+                print("dbccccccccccccc")
                 tag = True
         if  tag:
             '''Redis删除对应md5'''
