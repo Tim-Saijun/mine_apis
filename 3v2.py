@@ -9,7 +9,7 @@ r = redis.Redis()
 
 @app.route('/wavefile_list')
 def soleve_3():
-    md5_list = r.lrange('asv', 0, -1)
+    md5_list = r.smembers('asv')
     print(md5_list)
     tag = False # 用来指示数据库是否存在，不写三层if  减少访问数据库的次数
     file_list = []
@@ -40,7 +40,7 @@ def soleve_3():
                 tag = True
         if  tag:
             '''Redis删除对应md5'''
-            r.lrem('asv',0,md5)
+            r.srem('asv', md5)
             print('什么都找不到')
     print(file_list)
     return jsonify(str(file_list))
