@@ -8,8 +8,8 @@ r = redis.Redis()
 app = Flask(__name__)
 
 
-# @app.route('/dxffile_list')
-@app.route('/')
+@app.route('/dxffile_list')
+#@app.route('/')
 def solve_7():
     md5_list = r.smembers('dxf')
     tag = False  # 用来指示数据库是否存在，不写三层if  减少访问数据库的次数
