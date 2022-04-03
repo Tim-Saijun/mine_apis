@@ -1,10 +1,10 @@
 import os
+
 import redis
 from flask import Flask, request, render_template, jsonify
+
 import Model
 import mysql
-import TC
-
 
 """To Do:
 0.接收返回参数 与前端沟通
@@ -34,7 +34,7 @@ def solve_1():
     path = os.path.join(os.getcwd(), "upload/asc/", name)
     f.save(path)
     md5 = Model.md5(path)
-    path_md5 = os.path.join(os.getcwd(), "upload/asc_md5/", +'md5.asc')
+    path_md5 = os.path.join(os.getcwd(), "upload/asc_md5/", md5 + '.asc')
     f.save(path_md5)
     # 生成md5,小问题：重名文件会被怎样处理，这关系到md5的生成
     r.sadd('asv', md5)
@@ -46,7 +46,14 @@ def solve_1():
         print("# Redis存在被标记的文件,直接返回")
         picks_p = r.hget(md5, "picks_p")
         picks_s = r.hget(md5, "picks_s")
-        return render_template('test000.html', picks_p = picks_p, picks_s = picks_s)
+        data = {'picks_p': eval(picks_p),  # 直接使用str函数，不用变量储存，因为后面需要返回值
+                'picks_s': eval(picks_s),
+                }  # pi
+        res = {"code": 200,
+               'msg': "存入成功_已存在",
+               'data': data}
+        return jsonify(res)
+        # return render_template('test000.html', picks_p = picks_p, picks_s = picks_s)
     elif not r.exists(md5):  # Redis没有，但是数据库有且标注过
         db_query = """select * from ascd where name=%r and pick = 1;""" % name
         db = mysql.DB()
@@ -59,36 +66,56 @@ def solve_1():
             minearea = db_fetch[2]
             picks_p = db_fetch[7]
             picks_s = db_fetch[8]
-            data_info = {'name': name,
+            data_info = {'filename': name,
                          'frequency': frequency,
                          'minearea': minearea,
                          'picks_p': str(picks_p),  # 直接使用str函数，不用变量储存，因为后面需要返回值
                          'picks_s': str(picks_s),
                          'pick': 1}  # pick为1说明标注过
             r.hset(md5, mapping = data_info)
-
-            return render_template("test000.html", picks_p = picks_p, picks_s = picks_s)
+            return jsonify(data_info)
+            # return render_template("test000.html", picks_p = picks_p, picks_s = picks_s)
             # 传递给前端存入失败、已经存在 的信息
 
         else:
             print('# 判断数据库，有但是未标注：存； 没有:存，redis先存，code1////')
-            data_info = {'filename': name,
+            picks_p = {1: [1, 2, 3], 2: [2, 3, 4]}
+            picks_s = {1: [1, 2, 3], 2: [2, 3, 4]}
+            data_info = {'filename': f.filename,
                          'frequency': frequency,
                          'minearea': minearea,
-                         'pick': 0}  # pick为0说明没有标注过
+                         'pick': 1,
+                         'picks_p': str(picks_p),  # 直接使用str函数，不用变量储存，因为后面需要返回值
+                         'picks_s': str(picks_s),
+                         }  # pick为0说明没有标注过
             r.hset(md5, mapping = data_info)
 
             db_add = 'REPLACE INTO ascd(NAME,md5,FREQUENCY, MINEAREA,pick,path) VALUES(%r,%r,%r,%r,0,%r)' % (
-            name, md5, frequency, minearea, path)
+                name, md5, frequency, minearea, path)
             db = mysql.DB()
             db.execute(db_add)
-            return "存入成功"
+
+            data = {'picks_p': picks_p,  # 直接使用str函数，不用变量储存，因为后面需要返回值
+                    'picks_s': picks_s,
+                    }  # pi
+            res = {"code": 200,
+                   'msg': "存入成功_不存在的情况"
+                   }
+
+            return jsonify(res)
+
+
+@app.route('/phasepick/')
+def phasepick():
+    file_list = request.form['filemd5']
+    print(file_list)
+
 
 @app.route('/wavefile_list')
 def soleve_3():
     md5_list = r.smembers('asv')
     print(md5_list)
-    tag = False # 用来指示数据库是否存在，不写三层if  减少访问数据库的次数
+    tag = False  # 用来指示数据库是否存在，不写三层if  减少访问数据库的次数
     file_list = []
     for md5 in md5_list:
         if r.exists(md5):
@@ -99,54 +126,87 @@ def soleve_3():
             print(filename)
             pick = r.hget(md5, 'pick')
             position = r.hget(md5, 'position')
-            file_list.append({"filename": filename, "pick": pick, "position": position,"md5":md5})
+            position = '0'
+            tem = {"filename": bytes.decode(filename), "pick": bytes.decode(pick), "position": position,
+                   "md5": bytes.decode(md5)}
+            file_list.append(tem)
         else:
             print('''在数据库中寻找，存在返回filename，pick，position三个属性,不存在设置tag为True''')
             db = mysql.DB()
             md5 = bytes.decode(md5)
-            db_query3 = "select * from ascd where  md5= %r"%md5
+            db_query3 = "select * from ascd where  md5= %r" % md5
             asc_files_all = db.fetchall(db_query3)
             if asc_files_all != ():
                 for asc_file in asc_files_all:
                     filename = asc_file[1]
                     pick = asc_file[4]
                     position = asc_file[9]
-                    tem = {"filename": filename, "pick": pick, "position": position,"md5":md5}
+                    position = '0'
+                    tem = {"filename": bytes.decode(filename), "pick": bytes.decode(pick), "position": (position),
+                           "md5": md5}
                     file_list.append(tem)
-            else :
+            else:
                 tag = True
-        if  tag:
+        if tag:
             '''Redis删除对应md5'''
             r.srem('asv', md5)
             print('什么都找不到')
     print(file_list)
-    return jsonify(str(file_list))
+    res = {"code": 200,
+           'msg': "文件列表",
+           'data': file_list
+           }
+    return jsonify(res)
 
 
-@app.route('/locate')
+@app.route('/locate', methods = ['POST', 'GET'])
 def solve_4():
-    md5_list = ['02fcdc687ea469de024bc922f68926ef']  # 前端返回
+    md5_list = request.json['filemd5']  # 前端返回
     print(md5_list)
     location = [1, 2, 3]
     level = 3
     timestamp = 1  # 上面所有参数后期经过model计算得来
 
-    for md5 in md5_list:
-        minearea = r.hget(md5, 'minearea')
-        r.lpush(minearea, md5)  # 将其存入对于的列表中，为后面做准备
-        set_info = {'location': location, 'level': level, 'timestamp': timestamp}
-        r.hset(md5, mapping = set_info)  # 存储location、level，为后面做准备
-        db_up = "update ascd set location=%s,level=%d,timestamp=%s where md5=%r;"%(str(location),level,timestamp,md5)
-        db = mysql.DB()
-        db.execute(db_up)
+    data = {'location': location, 'level': level}
+
+    res = {"code": 200,
+           'msg': "文件列表",
+           'data': data
+           }
+    return jsonify(res)
+
+    # for md5 in md5_list:
+    #     minearea = r.hget(md5, 'minearea')
+    #     r.lpush(minearea, md5)  # 将其存入对于的列表中，为后面做准备
+    #     set_info = {'location': location, 'level': level, 'timestamp': timestamp}
+    #     r.hset(md5, mapping = set_info)  # 存储location、level，为后面做准备
+    #     db_up = "update ascd set location=%s,level=%d,timestamp=%s where md5=%r;" % (
+    #         str(location), level, timestamp, md5)
+    #     db = mysql.DB()
+    #     db.execute(db_up)
     return "something"
 
 
-
-
-@app.route('/rockburst_location_list', methods=['POST'])
+@app.route('/rockburst_location_list', methods = ['POST','GET'])
 def solve_5():
-    minearea = request.form['minearea']  # 前端传来
+    x = request.full_path
+    print(x)
+    # minearea = request.form['minearea']
+    # print(minearea)
+    location_list = []
+    tem = {
+        'location': [1,2, 3],
+        'level': 2,
+        'timestamp': '2022-4-3'
+    }
+    location_list.append(tem)
+     # 前端传来
+    res = {"code": 200,
+           'msg': "震源列表",
+           'data': location_list
+           }
+    return jsonify(res)
+
     md5_list = r.smembers(minearea)
     print(md5_list)
     get_info = ['location', 'level', 'timestamp']
@@ -174,9 +234,7 @@ def solve_5():
             r.srem(minearea, md5)
             print('什么都找不到')
     print(file_list)  # 后期改为返回file_list
-    return render_template('test000.html', file_list=file_list)
-
-
+    return render_template('test000.html', file_list = file_list)
 
 
 def return_img_stream(img_local_path):
@@ -193,17 +251,24 @@ def return_img_stream(img_local_path):
         img_stream = base64.b64encode(img_stream).decode()
     return img_stream
 
-@app.route('/upload/dxf' , methods = ['GET','POST'])
-def solve_6():
-    f = request.files['file']
-    path = os.path.join(os.getcwd(), "upload/dxf/", f.filename)
 
-    f.save(path)  # 保存dxf文件
-    print(path)
+@app.route('/upload/dxf', methods = ['GET', 'POST'])
+def solve_6():
+    f = request.files['dxf_file']
     minearea = request.form['minearea']  # 得到form表单传来的参数minearea
     render_type = request.form['render_type']
-    print(render_type)
     print(minearea)
+    print(render_type)
+    path = os.path.join(os.getcwd(), "upload/dxf/", f.filename)
+    f.save(path)  # 保存dxf文件
+
+    img_stream = return_img_stream(r'C:\Users\86183\Desktop\new_3.png')
+    res = {"code": 200,
+           'msg': "图片",
+           'data': 'data:image/svg;base64,'+img_stream
+           }
+    return jsonify(res)
+
     image = Model.model_3(path, minearea, render_type)
     print(path)
 
@@ -211,22 +276,23 @@ def solve_6():
     img_stream = return_img_stream(r'C:\Users\86183\Desktop\new_3.png')
     md5 = Model.md5(path)
     print(md5)
-    r.hset(md5,'image_path',image)
+    r.hset(md5, 'image_path', image)
     r.hset(md5, 'rockburst', 1)
-    r.hset(md5 , 'filename',f.filename)
+    r.hset(md5, 'filename', f.filename)
     r.sadd('dxf', md5)
     '''保存图片、rockburst到数据库'''
     db = mysql.DB()
-    db_add = 'REPLACE INTO dxff(id,dxf_file,render_type,minearea,path,rockburst,md5) values (%d,%r,%r,%r,%r,%d,%r)' %(1,f.filename,render_type,minearea,path,1,md5)
+    db_add = 'REPLACE INTO dxff(id,dxf_file,render_type,minearea,path,rockburst,md5) values (%d,%r,%r,%r,%r,%d,%r)' % (
+        1, f.filename, render_type, minearea, path, 1, md5)
     db.execute(db_add)
-    return render_template('test111.html',img_stream = img_stream)
+    return render_template('test111.html', img_stream = img_stream)
 
 
 @app.route('/dxffile_list')
 def solve_7():
     md5_list = r.smembers('dxf')
     tag = False  # 用来指示数据库是否存在，不写三层if  减少访问数据库的次数
-    get_info = ['filename', 'rockburst','md5']
+    get_info = ['filename', 'rockburst', 'md5']
     file_list = []
     for md5 in md5_list:
         '''# Redis存在md5'''
