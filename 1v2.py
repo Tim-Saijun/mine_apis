@@ -76,7 +76,7 @@ def solve_1():
             r.hset(md5, mapping = data_info)
 
             db_add = 'REPLACE INTO ascd(NAME,md5,FREQUENCY, MINEAREA,pick,path) VALUES(%r,%r,%r,%r,0,%r)' % (
-            name, md5, frequency, minearea, path)
+                name, md5, frequency, minearea, path)
             db = mysql.DB()
             db.execute(db_add)
             return "存入成功"

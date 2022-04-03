@@ -3,6 +3,7 @@ import redis
 from flask import Flask, request, render_template, jsonify
 import Model
 import mysql
+import TC
 
 
 """To Do:
@@ -32,7 +33,10 @@ def solve_1():
     name = f.filename
     path = os.path.join(os.getcwd(), "upload/asc/", name)
     f.save(path)
-    md5 = Model.md5(path)  # 生成md5,小问题：重名文件会被怎样处理，这关系到md5的生成
+    md5 = Model.md5(path)
+    path_md5 = os.path.join(os.getcwd(), "upload/asc_md5/", +'md5.asc')
+    f.save(path_md5)
+    # 生成md5,小问题：重名文件会被怎样处理，这关系到md5的生成
     r.sadd('asv', md5)
     print(name)
     print(path)
@@ -138,29 +142,6 @@ def solve_4():
     return "something"
 
 
-@app.route('/')
-def fun():
-    return '''
-    <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
-<form action="/rockburst_location_list" method="post" enctype="multipart/form-data" >
-    <p>IP：<input type="input" name="ip" ></p>
-    <p>PORT：<input type="input" name="port"></p>
-    <p>参数：<input type="input" name="x"></p>
-    <p>minearea：<input type="input" name="minearea"></p>
-    <p><input type="file" name="file" ></p>
-    <p><input type="submit"  ></p>
-
-</form>
-</body>
-
-
-    '''
 
 
 @app.route('/rockburst_location_list', methods=['POST'])
@@ -242,7 +223,6 @@ def solve_6():
 
 
 @app.route('/dxffile_list')
-#@app.route('/')
 def solve_7():
     md5_list = r.smembers('dxf')
     tag = False  # 用来指示数据库是否存在，不写三层if  减少访问数据库的次数
