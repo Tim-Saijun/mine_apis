@@ -133,6 +133,8 @@ def solve_1():
 
 def phasepick(file_list):
     data = []
+    db_pick=[]
+    db = mysql.DB()
     for each in file_list:
         pick_p, pick_s = TC.tc(each)
         tem = {
@@ -140,9 +142,10 @@ def phasepick(file_list):
             'pick_s': pick_s
         }
         data.append(tem)
+        db_pick.append('''update ascd set picks_p=%r,picks_s=%r,pick=1 where md5=%r;'''%(pick_p,pick_s,each))
     for i in range(len(file_list)):
         r.hset(file_list[i], mapping = data[i])
-
+        db.execute(db_pick[i])
     '''
         接下来数据库存储数据，并且把pick改为1
     '''
