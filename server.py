@@ -194,7 +194,7 @@ def solve_3():
             filename = r.hget(md5, 'filename')
             pick = r.hget(md5, 'pick')
             position = r.hget(md5, 'position')
-            tunnel_num = r.get(md5, 'tunnel_num')
+            tunnel_num = r.hget(md5, 'tunnel_num')
             tem = {"filename": bytes.decode(filename), "pick": bytes.decode(pick), "position": bytes.decode(position),
                    "md5": bytes.decode(md5), "tunnel_num": bytes.decode(tunnel_num)}
             file_list.append(tem)
