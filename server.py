@@ -151,7 +151,7 @@ def phasepick(file_list):
         }
         # print(time_list)
         data.append(tem)
-        db_pick.append('''update ascd set picks_p=%r,picks_s=%r,pick=1,time_list=%r,tunnel_num=%r  where md5=%r;''' % (pick_p, pick_s, each,time_list,len(time_list)))
+        db_pick.append('''update ascd set picks_p=%r,picks_s=%r,pick=1,time_list=%r,tunnel_num=%r  where md5=%r;''' % (pick_p, pick_s,time_list,len(time_list), each))
     for i in range(len(file_list)):
         r.hset(file_list[i], mapping = data[i])
         db.execute(db_pick[i])
