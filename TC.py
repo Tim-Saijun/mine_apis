@@ -32,10 +32,12 @@ def tc(md5):
 
     size = head['pick_p']
     pick_p = tcp_client.recv(size)
+    pick_p = json.loads(pick_p.decode())
     print('pick_p', pick_p)
 
     size = head['pick_s']
     pick_s = tcp_client.recv(size)
+    pick_s = json.loads(pick_s.decode())
     print('pick_s', pick_s)
 
     tcp_client.close()

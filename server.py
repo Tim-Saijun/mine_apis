@@ -2,10 +2,11 @@ import os
 from threading import Thread
 
 import redis
-from flask import Flask, request, jsonify, send_from_directory,render_template
+from flask import Flask, request, jsonify, send_from_directory, render_template
 
 import Model
 import TC
+import location as Loc
 import mysql
 
 """To Do:
@@ -91,8 +92,8 @@ def solve_1():
             # 存储Redis end
 
             data = {
-                'picks_p': str(picks_p),  # 直接使用str函数，不用变量储存，因为后面需要返回值
-                'picks_s': str(picks_s)
+                'picks_p': picks_p,  # 直接使用str函数，不用变量储存，因为后面需要返回值
+                'picks_s': picks_s
             }
             res = {"code": 200,
                    'msg': "成功_数据库存在且标注过",
@@ -135,10 +136,18 @@ def phasepick(file_list):
     data = []
     for each in file_list:
         pick_p, pick_s = TC.tc(each)
+        time_list = []
+
+        for val in pick_p.values():
+            if val:
+                time_list.append(val[0] * 0.002)
         tem = {
-            'pick_p': pick_p,
-            'pick_s': pick_s
+            'pick_p': str(pick_p),
+            'pick_s': str(pick_s),
+            'time_list': str(time_list),
+            'tunnel_num': len(time_list)
         }
+        # print(time_list)
         data.append(tem)
     for i in range(len(file_list)):
         r.hset(file_list[i], mapping = data[i])
@@ -146,16 +155,30 @@ def phasepick(file_list):
     '''
         接下来数据库存储数据，并且把pick改为1
     '''
-    print(data)
+    print('data', data)
 
 
 @app.route('/phasepick/')
 def solve_2():
     # file_list = request.form['filemd5']
-    file_list = ['md5']
+    file_list = ['md5', 'md5']
     thread = Thread(target = phasepick, args = (file_list,))
     thread.setDaemon = True
     thread.start()
+
+    """
+    后续看情况，是否需要计算完同时返回picks，还是只需要计算即可
+        data = {
+        'picks_p': picks_p,  # 直接使用str函数，不用变量储存，因为后面需要返回值
+        'picks_s': picks_s
+    }
+    res = {"code": 200,
+           'msg': "成功_数据库存在且标注过",
+           'data': data}
+    return jsonify(res)
+    """
+
+    print('yesyesyes')
     return 'yesyesyes'
 
 
@@ -171,8 +194,9 @@ def solve_3():
             filename = r.hget(md5, 'filename')
             pick = r.hget(md5, 'pick')
             position = r.hget(md5, 'position')
+            tunnel_num = r.get(md5, 'tunnel_num')
             tem = {"filename": bytes.decode(filename), "pick": bytes.decode(pick), "position": bytes.decode(position),
-                   "md5": bytes.decode(md5)}
+                   "md5": bytes.decode(md5), "tunnel_num": bytes.decode(tunnel_num)}
             file_list.append(tem)
         else:
             print('''在数据库中寻找，存在返回filename，pick，position三个属性,不存在设置tag为True''')
@@ -185,11 +209,13 @@ def solve_3():
                     filename = asc_file[1]
                     pick = asc_file[4]
                     position = asc_file[9]
+                    tunnel_num = asc_file[13]
                     tem = {
                         "filename": filename,
                         "pick": pick,
                         "position": position,
-                        "md5": md5
+                        "md5": md5,
+                        "tunnel_num": tunnel_num
                     }
                     file_list.append(tem)
             else:
@@ -214,8 +240,23 @@ def solve_4():
     '''
     填写震源定位模型代码
     '''
+    md5 = 'md5'
+    geophones_coordinates = [[-3902077.25, 36376474.50, 886.34],
+                             [-3902541.43, 36376337.24, 904.82],
+                             [-3902776.98, 36376478.80, 902.56],
+                             [-3902733.14, 36376282.27, 908.90]]
+    """
+    实际代码
+        time_list = r.hget(md5,'time_list')
+        time_list = eval(time_list)
+        res = Loc.solve(geophones_coordinates, time_list)
+        location = [*res]   
+    """
 
-    location = [1, 2, 3]
+    time_list = [6.902, 6.776, 6.714, 6.760]
+    res = Loc.solve(geophones_coordinates, time_list)
+    location = [*res]
+
     level = 3
     timestamp = 1  # 上面所有参数后期经过model计算得来
     r.sadd('dxf_locate', *md5_list)  # 将md5里面的所有文件设置为已经标注过的
@@ -223,7 +264,7 @@ def solve_4():
     for md5 in md5_list:
         minearea = r.hget(md5, 'minearea')
         r.sadd(minearea, md5)  # 将其存入对于的列表中，为后面做准备
-        set_info = {'location': location, 'level': level, 'timestamp': timestamp}
+        set_info = {'location': location, 'level': level, 'timestamp': timestamp, 'tunnel_num': tunnel_num}
         r.hset(md5, mapping = set_info)  # 存储location、level，为后面做准备
         db_up = "update ascd set location=%s,level=%d,timestamp=%s where md5=%r;" % (
             str(location), level, timestamp, md5)
@@ -379,7 +420,6 @@ def solve_7():
     return jsonify(res)
 
 
-
 # @app.route('/', methods = ["GET", "POST"])
 @app.route('/download', methods = ["GET", "POST"])
 def download():
@@ -391,3 +431,7 @@ def download():
 
     except Exception as E:
         app.log.info("下载失败")
+
+
+if __name__ == '__main__':
+    app.run(debug = True)
