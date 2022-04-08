@@ -264,7 +264,7 @@ def solve_4():
     for md5 in md5_list:
         minearea = r.hget(md5, 'minearea')
         r.sadd(minearea, md5)  # 将其存入对于的列表中，为后面做准备
-        set_info = {'location': location, 'level': level, 'timestamp': timestamp, 'tunnel_num': tunnel_num}
+        set_info = {'location': location, 'level': level, 'timestamp': timestamp}
         r.hset(md5, mapping = set_info)  # 存储location、level，为后面做准备
         db_up = "update ascd set location=%s,level=%d,timestamp=%s where md5=%r;" % (
             str(location), level, timestamp, md5)
