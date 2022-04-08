@@ -209,7 +209,7 @@ def solve_3():
                     filename = asc_file[1]
                     pick = asc_file[4]
                     position = asc_file[9]
-                    tunnel_num = asc_file[13]
+                    tunnel_num = asc_file[14]
                     tem = {
                         "filename": filename,
                         "pick": pick,
